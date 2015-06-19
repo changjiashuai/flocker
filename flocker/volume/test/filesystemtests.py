@@ -9,6 +9,8 @@ instance as its first argument and returns some object to be used in a test.
 
 from __future__ import absolute_import
 
+import errno
+
 from characteristic import attributes
 from zope.interface.verify import verifyObject
 
@@ -618,7 +620,11 @@ def make_istoragepool_tests(fixture, snapshot_factory):
                     with from_filesystem.reader() as reader:
                         with to_filesystem.writer() as writer:
                             data = reader.read()
-                            writer.write(data[1:])
+                            try:
+                                writer.write(data[1:])
+                            except IOError as e:
+                                if e.errno != errno.EPIPE:
+                                    raise
                             raise ZeroDivisionError()
                 except ZeroDivisionError:
                     pass
